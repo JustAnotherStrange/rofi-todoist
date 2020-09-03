@@ -10,4 +10,4 @@ Use the Add task option to add a task using explicit syntax.
 
 Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. 
 
-At any time press the escape key to exit, and press the exit option to go up a menu.'
+At any time press the escape key to exit, and press the exit option to go up a menu.
