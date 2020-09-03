@@ -3,58 +3,56 @@
 # fix when adding task date where date has multiple words, if possible
 # add modify task option
 # Add priority level into list but have it be pretty
+# add failure messages
 # maybe more?
 function modify_task {
-	echo "WIP"
 	# Add priority level option once that is added everywhere else
 	actiond=`printf "Name\nDate" | rofi -dmenu -i -mesg 'What would you like to modify?'`
 	if [ $actiond = Name ]; then
-		newname=`rofi -dmenu -mesg 'Enter new name'`
+		newname=`rofi -dmenu -l 0 -mesg 'Enter new name'`
 		taskid=`echo $actionb | awk '{print $NF}'`
-		todoist modify $taskid --content $newname
+		todoist modify $taskid --content $newname && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
 	fi
 	if [ $actiond = Date ]; then
-		echo "WIP"
+		newdate=`rofi -dmenu -l 0 -mesg 'Enter new date'`
+		taskid=`echo $actionb | awk '{print $NF}'`
+		todoist modify $taskid --date $newdate && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
 	fi
 }
 function add_task {
 	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
 	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
-	todoist add -d $taskdate $taskname
-	rofi -dmenu -l 0 -mesg 'Task successfully added.'
+	todoist add -d $taskdate $taskname && rofi -dmenu -l 0 -mesg 'Task successfully added.'
 	exec ~/.local/bin/rofi-todoist
 }
 function complete_task {
 	if [ "$actionc" = Exit ]; then
 		exec ~/.local/bin/rofi-todoist # possibly make this have functions so this goes only one menu above?
 	else
-		echo $actionb | awk '{print $NF}' | xargs todoist c
-		rofi -dmenu -l 0 -mesg "Task successfully completed"
+		echo $actionb | awk '{print $NF}' | xargs todoist c && rofi -dmenu -l 0 -mesg "Task successfully completed"
 		exec ~/.local/bin/rofi-todoist
-	fi
-}
-function list_tasks {
-	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
-	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
-	echo $actionb
-	if [ "$actionb" = Exit ]; then
-		exec ~/.local/bin/rofi-todoist
-	else
-		sub_menu
 	fi
 }
 function sub_menu {
 	taskchoice=`todoist l | awk '{print $6}'`
-	actionc=`printf "Complete task $taskchoice\nModify task $taskchoice\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
-	if [ "$actionc" = 'Complete Task' ]; then
+	actionc=`printf "Complete task\nModify task\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action for $taskchoice:'` 
+	if [ "$actionc" = 'Complete task' ]; then
 		complete_task
 	fi
 	if [ "$actionc" = 'Modify task' ]; then
 		modify_task
 	fi
 }
+function list_tasks {
+	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
+	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
+	if [ "$actionb" = Exit ]; then
+		exec ~/.local/bin/rofi-todoist
+	else
+		sub_menu
+	fi
+}
 action=`printf "List tasks\nAdd task\nExit" | rofi -dmenu -i -l 3 -mesg 'Pick an action:'`
-echo $action
 if [ "$action" = "List tasks" ]; then
 	list_tasks
 fi
