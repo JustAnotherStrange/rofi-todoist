@@ -4,19 +4,18 @@
 # add modify task option
 # Add priority level into list but have it be pretty
 # maybe more?
-function list_tasks {
-	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
-	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
-	echo $actionb
-	if [ "$actionb" = Exit ]; then
-		exec ~/.local/bin/rofi-todoist
-	else
-		complete_task
+function modify_task {
+	echo "WIP"
+	# Add priority level option once that is added everywhere else
+	actiond=`printf "Name\nDate" | rofi -dmenu -i -mesg 'What would you like to modify?'`
+	if [ $actiond = Name ]; then
+		newname=`rofi -dmenu -mesg 'Enter new name'`
+		taskid=`echo $actionb | awk '{print $NF}'`
+		todoist modify $taskid --content $newname
 	fi
-}
-function sub_menu {
-	taskchoice=`todoist l | awk '{print $6}'`
-	actionc=`printf "Complete task $taskchoice\nModify task $taskchoice\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
+	if [ $actiond = Date ]; then
+		echo "WIP"
+	fi
 }
 function add_task {
 	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
@@ -34,17 +33,24 @@ function complete_task {
 		exec ~/.local/bin/rofi-todoist
 	fi
 }
-function modify_task {
-	echo "WIP"
-	# Add priority level option once that is added everywhere else
-	actiond=`printf "Name\nDate" | rofi -dmenu -i -mesg 'What would you like to modify?'`
-	if [ $actiond = Name ]; then
-		newname=`rofi -dmenu -mesg 'Enter new name'`
-		taskid=`echo $actionb | awk '{print $NF}'`
-		todoist modify $taskid --content $newname
+function list_tasks {
+	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
+	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
+	echo $actionb
+	if [ "$actionb" = Exit ]; then
+		exec ~/.local/bin/rofi-todoist
+	else
+		sub_menu
 	fi
-	if [ $actiond = Date ]; then
-		echo "WIP"
+}
+function sub_menu {
+	taskchoice=`todoist l | awk '{print $6}'`
+	actionc=`printf "Complete task $taskchoice\nModify task $taskchoice\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
+	if [ "$actionc" = 'Complete Task' ]; then
+		complete_task
+	fi
+	if [ "$actionc" = 'Modify task' ]; then
+		modify_task
 	fi
 }
 action=`printf "List tasks\nAdd task\nExit" | rofi -dmenu -i -l 3 -mesg 'Pick an action:'`
