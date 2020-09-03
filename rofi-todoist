@@ -2,15 +2,8 @@
 # TODO: 
 # fix when adding task date where date has multiple words, if possible
 # add modify task option
+# Add priority level into list but have it be pretty
 # maybe more?
-action=`printf "List tasks\nAdd task\nExit" | rofi -dmenu -i -l 3 -mesg 'Pick an action:'`
-echo $action
-if [ "$action" = "List tasks" ]; then
-	list_tasks
-fi
-if [ "$action" = "Add task" ]; then
-	add_task
-fi
 function list_tasks {
 	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
 	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
@@ -43,5 +36,22 @@ function complete_task {
 }
 function modify_task {
 	echo "WIP"
-	printf "Name\nDate\nPriority level\n" | rofi -dmenu -i -mesg 'What would you like to modify?'
+	# Add priority level option once that is added everywhere else
+	actiond=`printf "Name\nDate" | rofi -dmenu -i -mesg 'What would you like to modify?'`
+	if [ $actiond = Name ]; then
+		newname=`rofi -dmenu -mesg 'Enter new name'`
+		taskid=`echo $actionb | awk '{print $NF}'`
+		todoist modify $taskid --content $newname
+	fi
+	if [ $actiond = Date ]; then
+		echo "WIP"
+	fi
 }
+action=`printf "List tasks\nAdd task\nExit" | rofi -dmenu -i -l 3 -mesg 'Pick an action:'`
+echo $action
+if [ "$action" = "List tasks" ]; then
+	list_tasks
+fi
+if [ "$action" = "Add task" ]; then
+	add_task
+fi
