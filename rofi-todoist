@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# TODO: 
+# fix when adding task date where date has multiple words, if possible
+# add modify task option
+# maybe more?
+action=`printf "List tasks\nAdd task\nExit" | rofi -dmenu -i -l 3 -mesg 'Pick an action:'`
+echo $action
+if [ "$action" = "List tasks" ]; then
+	list_tasks
+fi
+if [ "$action" = "Add task" ]; then
+	add_task
+fi
+function list_tasks {
+	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
+	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
+	echo $actionb
+	if [ "$actionb" = Exit ]; then
+		exec ~/.local/bin/rofi-todoist
+	else
+		complete_task
+	fi
+}
+function sub_menu {
+	taskchoice=`todoist l | awk '{print $6}'`
+	actionc=`printf "Complete task $taskchoice\nModify task $taskchoice\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
+}
+function add_task {
+	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
+	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
+	todoist add -d $taskdate $taskname
+	rofi -dmenu -l 0 -mesg 'Task successfully added.'
+	exec ~/.local/bin/rofi-todoist
+}
+function complete_task {
+	if [ "$actionc" = Exit ]; then
+		exec ~/.local/bin/rofi-todoist # possibly make this have functions so this goes only one menu above?
+	else
+		echo $actionb | awk '{print $NF}' | xargs todoist c
+		rofi -dmenu -l 0 -mesg "Task successfully completed"
+		exec ~/.local/bin/rofi-todoist
+	fi
+}
+function modify_task {
+	echo "WIP"
+	printf "Name\nDate\nPriority level\n" | rofi -dmenu -i -mesg 'What would you like to modify?'
+}
