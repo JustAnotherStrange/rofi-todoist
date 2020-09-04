@@ -22,23 +22,24 @@ function add_task {
 	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
 	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
 	todoist add -d $taskdate $taskname && rofi -dmenu -l 0 -mesg 'Task successfully added.'
-	exec ~/.local/bin/rofi-todoist
+	main_menu
 }
 function quick_add {
 	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	todoist q $quickterm
+	todoist q $quickterm && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
+	main_menu
 }
 function complete_task {
 	if [ "$actionc" = Exit ]; then
-		exec ~/.local/bin/rofi-todoist # possibly make this have functions so this goes only one menu above?
+		main_menu # should this go to main menu or just one menu above?
 	else
 		echo $actionb | awk '{print $NF}' | xargs todoist c && rofi -dmenu -l 0 -mesg "Task successfully completed"
-		exec ~/.local/bin/rofi-todoist
+		main_menu
 	fi
 }
 function sub_menu {
 	taskchoice=`todoist l | awk '{print $6}'`
-	actionc=`printf "Complete task\nModify task\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action for $taskchoice:'` 
+	actionc=`printf "Complete task\nModify task\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
 	if [ "$actionc" = 'Complete task' ]; then
 		complete_task
 	fi
@@ -58,16 +59,19 @@ function list_tasks {
 function help_menu {
 	rofi -dmenu -l 0 -mesg 'Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. Use the Add task option to add a task using explicit syntax. Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. At any time press the escape key to exit, and press the exit option to go up a menu.'	
 }
-action=`printf "List tasks\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 5 -mesg 'Pick an action:'`
-if [ "$action" = "List tasks" ]; then
-	list_tasks
-fi
-if [ "$action" = "Add task" ]; then
-	add_task
-fi
-if [ "$action" = "Quick Add task" ]; then
-	quick_add
-fi
-if [ "$action" = "Help" ]; then
-	help_menu
-fi
+function main_menu {
+	action=`printf "List tasks\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 5 -mesg 'Pick an action:'`
+	if [ "$action" = "List tasks" ]; then
+		list_tasks
+	fi
+	if [ "$action" = "Add task" ]; then
+		add_task
+	fi
+	if [ "$action" = "Quick Add task" ]; then
+		quick_add
+	fi
+	if [ "$action" = "Help" ]; then
+		help_menu
+	fi
+}
+main_menu
