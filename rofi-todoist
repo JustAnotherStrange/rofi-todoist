@@ -5,7 +5,7 @@
 # maybe more?
 function modify_task {
 	# Add priority level option once that is added everywhere else
-	actiond=`printf "Name\nDate" | rofi -dmenu -i -mesg 'What would you like to modify?'`
+	actiond=`printf "Name\nDate" | rofi -dmenu -i -l 2 -mesg 'What would you like to modify?'`
 	if [ $actiond = Name ]; then
 		newname=`rofi -dmenu -l 0 -mesg 'Enter new name'`
 		taskid=`echo $actionb | awk '{print $1}'`
