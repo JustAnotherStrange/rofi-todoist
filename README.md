@@ -1,10 +1,10 @@
 # rofi-todoist
 ## WARNING: THIS IS A WORK IN PROGRESS. 
-This is a work-in-progress rofi tool written in bash for viewing, adding, completing, and modifying Todoist tasks using https://github.com/sachaos/todoist. 
+This is a rofi tool written in bash for viewing, adding, completing, and modifying Todoist tasks using https://github.com/sachaos/todoist. 
 
 ![DEMO](https://github.com/JustAnotherStrange/rofi-todoist/raw/master/demo.gif)
 
-It's kind working enough now. Not 100% usable yet. See TODO at the top of the script's code for future features.
+Current status: Works enough for me. Submit any issues or PR's you'd like if you find issues.
 ## USAGE
 Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. 
 
