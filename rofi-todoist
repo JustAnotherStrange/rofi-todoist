@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # TODO: 
-# fix when adding task date where date has multiple words, if possible
 # Add priority level into list but have it be pretty
 # add failure messages
 # maybe more?
@@ -9,31 +8,31 @@ function modify_task {
 	actiond=`printf "Name\nDate" | rofi -dmenu -i -mesg 'What would you like to modify?'`
 	if [ $actiond = Name ]; then
 		newname=`rofi -dmenu -l 0 -mesg 'Enter new name'`
-		taskid=`echo $actionb | awk '{print $NF}'`
-		todoist modify $taskid --content $newname && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
+		taskid=`echo $actionb | awk '{print $1}'`
+		todoist modify $taskid --content "$(echo $newname)" && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
 	fi
 	if [ $actiond = Date ]; then
 		newdate=`rofi -dmenu -l 0 -mesg 'Enter new date'`
-		taskid=`echo $actionb | awk '{print $NF}'`
-		todoist modify $taskid --date $newdate && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
+		taskid=`echo $actionb | awk '{print $1}'`
+		todoist modify $taskid --date "$(echo $newdate)" && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
 	fi
 }
 function add_task {
 	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
 	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
-	todoist add -d $taskdate $taskname && rofi -dmenu -l 0 -mesg 'Task successfully added.'
+	todoist add -d "$(echo $taskdate)" "$(echo $taskname)" && rofi -dmenu -l 0 -mesg 'Task successfully added.'
 	main_menu
 }
 function quick_add {
 	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	todoist q $quickterm && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
+	todoist q "$(echo $quickterm)" && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
 	main_menu
 }
 function complete_task {
 	if [ "$actionc" = Exit ]; then
 		main_menu # should this go to main menu or just one menu above?
 	else
-		echo $actionb | awk '{print $NF}' | xargs todoist c && rofi -dmenu -l 0 -mesg "Task successfully completed"
+		echo $actionb | awk '{print $1}' | xargs todoist c && rofi -dmenu -l 0 -mesg "Task successfully completed"
 		main_menu
 	fi
 }
@@ -48,7 +47,8 @@ function sub_menu {
 	fi
 }
 function list_tasks {
-	tasklist=`todoist l | awk '{print $6,$3,$4,$1}'`
+	todoist sync
+	tasklist=`todoist l | awk '{$2=$5=""; print $0}'`
 	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
 	if [ "$actionb" = Exit ]; then
 		exec ~/.local/bin/rofi-todoist
