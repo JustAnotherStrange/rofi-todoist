@@ -56,13 +56,28 @@ function list_tasks {
 		sub_menu
 	fi
 }
+
+function today_tasks {
+	todoist sync
+	tasklist=`todoist l -f today | awk '{$2=$5=""; print $0}'`
+	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
+	if [ "$actionb" = Exit ]; then
+		exec ~/.local/bin/rofi-todoist
+	else
+		sub_menu
+	fi
+}
+
 function help_menu {
-	rofi -dmenu -l 0 -mesg 'Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. Use the Add task option to add a task using explicit syntax. Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. At any time press the escape key to exit, and press the exit option to go up a menu.'	
+	rofi -dmenu -l 0 -mesg 'Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. Use the Add task option to add a task using explicit syntax. Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. At any time press the escape key to exit, and press the exit option to go up a menu.'
 }
 function main_menu {
-	action=`printf "List tasks\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 5 -mesg 'Pick an action:'`
+	action=`printf "List tasks\nToday's tasks\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 5 -mesg 'Pick an action:'`
 	if [ "$action" = "List tasks" ]; then
 		list_tasks
+	fi
+        if [ "$action" = "Today's tasks" ]; then
+		today_tasks
 	fi
 	if [ "$action" = "Add task" ]; then
 		add_task
