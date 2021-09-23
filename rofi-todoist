@@ -28,6 +28,10 @@ function quick_add {
 	todoist q "$(echo $quickterm)" && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
 	main_menu
 }
+function fast_quick_add {
+	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
+	todoist q "$(echo $quickterm)" && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
+}
 function complete_task {
 	if [ "$actionc" = Exit ]; then
 		main_menu # should this go to main menu or just one menu above?
@@ -89,4 +93,10 @@ function main_menu {
 		help_menu
 	fi
 }
-main_menu
+
+if [ "${1}" == "fq" ];
+then
+    fast_quick_add
+else
+    main_menu
+fi
