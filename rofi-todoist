@@ -3,34 +3,67 @@
 # Add priority level into list but have it be pretty
 # add failure messages
 # maybe more?
+
+## Customizations:
+
+# The variables bellow can be customized editing this file or just
+# setting those environment variables in your session, adding those
+# exports in your ~/.bashrc (for Bash users)
+# Eg.
+# $ echo "export $ROFI_TODOIST_NOTIFICATION=notify-send > ~/.bashrc"
+
+# Set this variable with the path where you clone the project
+declare project_root="${ROFI_TODOIST_ROOT_PATH}"
+
+# Set this variable to define which notification method you'll use
+# Valid entries:
+#   declare notify_command="rofi"
+#   declare notify_command="notify-send"
+declare notify_command="${ROFI_TODOIST_NOTIFICATION:-rofi}"
+
+
+## Code - Only change bellow this line if you know what you're doing
+
+function notify() {
+	case $notify_command in
+		"rofi")
+			rofi -dmenu -l 0 -mesg "${1}"
+			;;
+
+		"notify-send")
+			notify-send "Rofi Todoist" "${1}" -i "${project_root}/imgs/todoist.png"
+			;;
+	esac
+}
+
 function modify_task {
 	# Add priority level option once that is added everywhere else
 	actiond=`printf "Name\nDate" | rofi -dmenu -i -l 2 -mesg 'What would you like to modify?'`
 	if [ $actiond = Name ]; then
 		newname=`rofi -dmenu -l 0 -mesg 'Enter new name'`
 		taskid=`echo $actionb | awk '{print $1}'`
-		todoist modify $taskid --content "$(echo $newname)" && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
+		todoist modify $taskid --content "$(echo $newname)" && notify 'Task successfully modified.'
 	fi
 	if [ $actiond = Date ]; then
 		newdate=`rofi -dmenu -l 0 -mesg 'Enter new date'`
 		taskid=`echo $actionb | awk '{print $1}'`
-		todoist modify $taskid --date "$(echo $newdate)" && rofi -dmenu -l 0 -mesg 'Task successfully modified.'
+		todoist modify $taskid --date "$(echo $newdate)" && notify 'Task successfully modified.'
 	fi
 }
 function add_task {
 	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
 	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
-	todoist add -d "$(echo $taskdate)" "$(echo $taskname)" && rofi -dmenu -l 0 -mesg 'Task successfully added.'
+	todoist add -d "$(echo $taskdate)" "$(echo $taskname)" && notify 'Task successfully added.'
 	main_menu
 }
 function quick_add {
 	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	todoist q "$(echo $quickterm)" && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
+	todoist q "$(echo $quickterm)" && notify 'Task successfully quick added'
 	main_menu
 }
 function fast_quick_add {
 	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	todoist q "$(echo $quickterm)" && rofi -dmenu -l 0 -mesg 'Task successfully quick added'
+	todoist q "$(echo $quickterm)" && notify 'Task successfully quick added'
 }
 function complete_task {
 	if [ "$actionc" = Exit ]; then
@@ -60,7 +93,6 @@ function list_tasks {
 		sub_menu
 	fi
 }
-
 function today_tasks {
 	todoist sync
 	tasklist=`todoist l -f today | awk '{$2=$5=""; print $0}'`
@@ -71,16 +103,15 @@ function today_tasks {
 		sub_menu
 	fi
 }
-
 function help_menu {
-	rofi -dmenu -l 0 -mesg 'Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. Use the Add task option to add a task using explicit syntax. Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. At any time press the escape key to exit, and press the exit option to go up a menu.'
+	rofi -dmenu -l 0 -mesg 'Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. Use the Add task option to add a task using explicit syntax. Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. At any time press the escape key to exit, and press the exit option to go up a menu.'	
 }
 function main_menu {
 	action=`printf "List tasks\nToday's tasks\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 5 -mesg 'Pick an action:'`
 	if [ "$action" = "List tasks" ]; then
 		list_tasks
 	fi
-        if [ "$action" = "Today's tasks" ]; then
+	if [ "$action" = "Today's tasks" ]; then
 		today_tasks
 	fi
 	if [ "$action" = "Add task" ]; then
@@ -96,7 +127,7 @@ function main_menu {
 
 if [ "${1}" == "fq" ];
 then
-    fast_quick_add
+	fast_quick_add
 else
-    main_menu
+	main_menu
 fi
