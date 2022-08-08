@@ -40,84 +40,108 @@ function notify() {
 
 function modify_task {
 	# Add priority level option once that is added everywhere else
-	actiond=`printf "Name\nDate" | rofi -dmenu -i -l 2 -mesg 'What would you like to modify?'`
-	if [ $actiond = Name ]; then
-		newname=`rofi -dmenu -l 0 -mesg 'Enter new name'`
-		taskid=`echo $actionb | awk '{print $1}'`
+	local taskid=$1
+	local action=`printf "Name\nDate" | rofi -dmenu -i -l 2 -p 'Action' -mesg 'What would you like to modify?'`
+	if [ "$action" = Name ]; then
+		local newname=`rofi -dmenu -l 0 -p 'Name' -mesg 'Enter new name'`
 		$todoist_command modify $taskid --content "$(echo $newname)" && notify 'Task successfully modified.'
 	fi
-	if [ $actiond = Date ]; then
-		newdate=`rofi -dmenu -l 0 -mesg 'Enter new date'`
-		taskid=`echo $actionb | awk '{print $1}'`
+	if [ "$action" = Date ]; then
+		local newdate=`rofi -dmenu -l 0 -p 'Date' -mesg 'Enter new date'`
 		$todoist_command modify $taskid --date "$(echo $newdate)" && notify 'Task successfully modified.'
 	fi
 }
+
 function add_task {
-	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
-	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
-	$todoist_command add -d "$(echo $taskdate)" "$(echo $taskname)" && notify 'Task successfully added.'
+	taskname=`rofi -dmenu -i -l 0 -p 'Name' -mesg 'Enter name of new task'`
+	taskdate=`rofi -dmenu -i -l 0 -p 'Date' -mesg 'Enter time and/or date of new task'`
+	$todoist_command add --priority "$(echo $taskdate)" "$(echo $taskname)" && notify 'Task successfully added.'
 	main_menu
 }
+
 function quick_add {
-	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	$todoist_command q "$(echo $quickterm)" && notify 'Task successfully quick added'
+	local quickterm=`rofi -dmenu -l 0 -p 'Quick add' -mesg 'Enter Quick Add syntax for new task'`
+	$todoist_command quick "$(echo $quickterm)" && notify 'Task successfully quick added'
 	main_menu
 }
-function fast_quick_add {
-	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	$todoist_command q "$(echo $quickterm)" && notify 'Task successfully quick added'
-}
+
 function complete_task {
-	if [ "$actionc" = Exit ]; then
-		main_menu # should this go to main menu or just one menu above?
-	else
-		echo $actionb | awk '{print $1}' | xargs $todoist_command c && rofi -dmenu -l 0 -mesg "Task successfully completed"
-		main_menu
+	$todoist_command close $1 && notify 'Task successfully completed'
+	main_menu
+}
+
+function task_menu {
+	local action=`printf "Show details\nComplete task\nModify task\nExit" | rofi -dmenu -i -l 4 -p 'Pick an action'` 
+	if [ "$action" = Exit ]; then
+		exec "${project_root}/rofi-todoist";
+	fi
+	if [ "$action" = "Show details" ]; then
+		$todoist_command show $1 | rofi -dmenu -l 7 -p $1 > /dev/null
+		task_menu $1;
+	fi
+	if [ "$action" = 'Complete task' ]; then
+		complete_task $1;
+	fi
+	if [ "$action" = 'Modify task' ]; then
+		modify_task $1;
 	fi
 }
-function sub_menu {
-	taskchoice=`$todoist_command l | awk '{print $6}'`
-	actionc=`printf "Complete task\nModify task\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
-	if [ "$actionc" = 'Complete task' ]; then
-		complete_task
-	fi
-	if [ "$actionc" = 'Modify task' ]; then
-		modify_task
-	fi
-}
+
 function list_tasks {
 	$todoist_command sync
-	tasklist=`$todoist_command l | awk '{$2=$5=""; print $0}'`
-	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
-	if [ "$actionb" = Exit ]; then
+	if [ -n "$1" ]; then
+		local tasklist=`$todoist_command l -f $1 | cut -d' ' -f 1,3,4,8-`
+	else
+		local tasklist=`$todoist_command l | cut -d' ' -f 1,3,4,8-`
+	fi
+	local action=`printf "$tasklist\nExit" | rofi -dmenu -i -p 'Task' -mesg 'Pick a task:'|cut -d' ' -f1`
+	if [ "$action" = Exit ] || [ -z "$action" ]; then
 		exec "${project_root}/rofi-todoist"
 	else
-		sub_menu
+		task_menu $action
 	fi
 }
-function today_tasks {
+
+function list_projects {
 	$todoist_command sync
-	tasklist=`$todoist_command l -f today | awk '{$2=$5=""; print $0}'`
-	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
-	if [ "$actionb" = Exit ]; then
+	local projectlist=`$todoist_command projects | cut -d' ' -f 2`
+	local action=`printf "${projectlist}\nExit" | rofi -dmenu -i -p 'Project' -mesg 'Filter by project:'`
+	if [ "$action" = Exit ]; then
 		exec "${project_root}/rofi-todoist"
 	else
-		sub_menu
+		list_tasks $action
 	fi
 }
+
+function list_labels {
+	$todoist_command sync
+	local labellist=`$todoist_command labels | cut -d' ' -f 2`
+	local action=`printf "${labellist}\nExit" | rofi -dmenu -i -p 'label' -mesg 'Filter by label:'`
+	if [ "$action" = Exit ]; then
+		exec "${project_root}/rofi-todoist"
+	else
+		list_tasks $action
+	fi
+}
+
 function help_menu {
 	rofi -dmenu -l 0 -mesg 'Use List Tasks option to list tasks. Selecting a task from this menu will prompt with actions to do, such as complete the task or modify it. Use the Add task option to add a task using explicit syntax. Use the Quick Add option to add a task using the Todoist smart Quick Add feature, where it recognizes the time, name, and date of the task by reading a sentence you write. At any time press the escape key to exit, and press the exit option to go up a menu.'	
+	main_menu
 }
+
 function main_menu {
-	action=`printf "List tasks\nToday's tasks\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 5 -mesg 'Pick an action:'`
+	action=`printf "List tasks\nToday's tasks\nProjects\nLabels\nQuick Add task\nAdd task\nHelp\nExit" | rofi -dmenu -i -l 7 -p 'Pick an action'`
 	if [ "$action" = "List tasks" ]; then
 		list_tasks
 	fi
 	if [ "$action" = "Today's tasks" ]; then
-		today_tasks
+		list_tasks "today"
 	fi
-	if [ "$action" = "Add task" ]; then
-		add_task
+	if [ "$action" = "Projects" ]; then
+		list_projects
+	fi
+	if [ "$action" = "Labels" ]; then
+		list_labels
 	fi
 	if [ "$action" = "Quick Add task" ]; then
 		quick_add
@@ -129,7 +153,7 @@ function main_menu {
 
 if [ "${1}" == "fq" ];
 then
-	fast_quick_add
+	quick_add
 else
 	main_menu
 fi
