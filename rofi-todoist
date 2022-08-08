@@ -21,6 +21,8 @@ declare project_root="${ROFI_TODOIST_ROOT_PATH}"
 #   declare notify_command="notify-send"
 declare notify_command="${ROFI_TODOIST_NOTIFICATION:-rofi}"
 
+# Set name of todoist binary
+declare todoist_command="${ROFI_TODOIST_PATH:-todoist}"
 
 ## Code - Only change bellow this line if you know what you're doing
 
@@ -42,39 +44,39 @@ function modify_task {
 	if [ $actiond = Name ]; then
 		newname=`rofi -dmenu -l 0 -mesg 'Enter new name'`
 		taskid=`echo $actionb | awk '{print $1}'`
-		todoist modify $taskid --content "$(echo $newname)" && notify 'Task successfully modified.'
+		$todoist_command modify $taskid --content "$(echo $newname)" && notify 'Task successfully modified.'
 	fi
 	if [ $actiond = Date ]; then
 		newdate=`rofi -dmenu -l 0 -mesg 'Enter new date'`
 		taskid=`echo $actionb | awk '{print $1}'`
-		todoist modify $taskid --date "$(echo $newdate)" && notify 'Task successfully modified.'
+		$todoist_command modify $taskid --date "$(echo $newdate)" && notify 'Task successfully modified.'
 	fi
 }
 function add_task {
 	taskname=`rofi -dmenu -i -l 0 -mesg 'Enter name of new task'`
 	taskdate=`rofi -dmenu -i -l 0 -mesg 'Enter time and/or date of new task'`
-	todoist add -d "$(echo $taskdate)" "$(echo $taskname)" && notify 'Task successfully added.'
+	$todoist_command add -d "$(echo $taskdate)" "$(echo $taskname)" && notify 'Task successfully added.'
 	main_menu
 }
 function quick_add {
 	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	todoist q "$(echo $quickterm)" && notify 'Task successfully quick added'
+	$todoist_command q "$(echo $quickterm)" && notify 'Task successfully quick added'
 	main_menu
 }
 function fast_quick_add {
 	quickterm=`rofi -dmenu -l 0 -mesg 'Enter Quick Add syntax for new task'`
-	todoist q "$(echo $quickterm)" && notify 'Task successfully quick added'
+	$todoist_command q "$(echo $quickterm)" && notify 'Task successfully quick added'
 }
 function complete_task {
 	if [ "$actionc" = Exit ]; then
 		main_menu # should this go to main menu or just one menu above?
 	else
-		echo $actionb | awk '{print $1}' | xargs todoist c && rofi -dmenu -l 0 -mesg "Task successfully completed"
+		echo $actionb | awk '{print $1}' | xargs $todoist_command c && rofi -dmenu -l 0 -mesg "Task successfully completed"
 		main_menu
 	fi
 }
 function sub_menu {
-	taskchoice=`todoist l | awk '{print $6}'`
+	taskchoice=`$todoist_command l | awk '{print $6}'`
 	actionc=`printf "Complete task\nModify task\nExit" | rofi -dmenu -i -l 4 -mesg 'Pick an action:'` 
 	if [ "$actionc" = 'Complete task' ]; then
 		complete_task
@@ -84,8 +86,8 @@ function sub_menu {
 	fi
 }
 function list_tasks {
-	todoist sync
-	tasklist=`todoist l | awk '{$2=$5=""; print $0}'`
+	$todoist_command sync
+	tasklist=`$todoist_command l | awk '{$2=$5=""; print $0}'`
 	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
 	if [ "$actionb" = Exit ]; then
 		exec "${project_root}/rofi-todoist"
@@ -94,8 +96,8 @@ function list_tasks {
 	fi
 }
 function today_tasks {
-	todoist sync
-	tasklist=`todoist l -f today | awk '{$2=$5=""; print $0}'`
+	$todoist_command sync
+	tasklist=`$todoist_command l -f today | awk '{$2=$5=""; print $0}'`
 	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
 	if [ "$actionb" = Exit ]; then
 		exec "${project_root}/rofi-todoist"
