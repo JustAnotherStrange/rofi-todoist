@@ -88,7 +88,7 @@ function list_tasks {
 	tasklist=`todoist l | awk '{$2=$5=""; print $0}'`
 	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
 	if [ "$actionb" = Exit ]; then
-		exec ~/.local/bin/rofi-todoist
+		exec "${project_root}/rofi-todoist"
 	else
 		sub_menu
 	fi
@@ -98,7 +98,7 @@ function today_tasks {
 	tasklist=`todoist l -f today | awk '{$2=$5=""; print $0}'`
 	actionb=`printf "$tasklist\nExit" | rofi -dmenu -i -mesg 'Pick a task:'`
 	if [ "$actionb" = Exit ]; then
-		exec ~/.local/bin/rofi-todoist
+		exec "${project_root}/rofi-todoist"
 	else
 		sub_menu
 	fi
